@@ -25,17 +25,60 @@ app.get("/", (req, res) => {
 });
 
 // read sheet test
-app.get("/test-sheet", async (req, res) => {
-  try {
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: "Sheet1!A1:C10"
-    });
+app.get("/customers", async (req, res) => {
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: "CUSTOMERS"
+  });
+  res.json(response.data.values);
+});
 
-    res.json(response.data.values);
-  } catch (error) {
-    res.status(500).send(error.toString());
-  }
+app.get("/campaigns", async (req, res) => {
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: "CAMPAIGN LISTS"
+  });
+  res.json(response.data.values);
+});
+
+app.get("/ivr", async (req, res) => {
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: "IVR LISTS"
+  });
+  res.json(response.data.values);
+});
+
+app.get("/call-logs", async (req, res) => {
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: "CALL LOGS"
+  });
+  res.json(response.data.values);
+});
+
+app.get("/message-counter", async (req, res) => {
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: "MESSAGE COUNTER"
+  });
+  res.json(response.data.values);
+});
+
+app.get("/contacts", async (req, res) => {
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: "CONTACTS"
+  });
+  res.json(response.data.values);
+});
+
+app.get("/plans", async (req, res) => {
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: "PLANS"
+  });
+  res.json(response.data.values);
 });
 
 const PORT = process.env.PORT || 3000;
