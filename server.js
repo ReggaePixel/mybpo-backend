@@ -86,3 +86,26 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("Server running on port " + PORT);
 });
+
+app.post("/update-password", async (req, res) => {
+
+  const { row, password } = req.body;
+
+  try {
+
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SPREADSHEET_ID,
+      range: CUSTOMERS!B${row},
+      valueInputOption: "RAW",
+      requestBody: {
+        values: [[password]]
+      }
+    });
+
+    res.send("updated");
+
+  } catch (error) {
+    res.status(500).send(error.toString());
+  }
+
+});
