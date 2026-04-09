@@ -29,7 +29,7 @@ app.get("/call", (req, res) => {
 });
 
 app.post("/call", (req, res) => {
-  res.send("call route working");
+  res.send("call route working POST");
 });
 
 // read sheet test
