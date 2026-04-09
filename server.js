@@ -7,7 +7,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Google Auth using Render environment variables
+/* ===============================
+   Google Sheets Authentication
+================================= */
+
 const auth = new google.auth.JWT(
   process.env.GOOGLE_CLIENT_EMAIL,
   null,
@@ -19,7 +22,10 @@ const sheets = google.sheets({ version: "v4", auth });
 
 const SPREADSHEET_ID = "1sg4RyEdSYpJB74Y_kV3PEwOzsroRl4U8NOjtuYgQ0MM";
 
-// test route
+/* ===============================
+   Test Routes
+================================= */
+
 app.get("/", (req, res) => {
   res.send("MyBPO backend running");
 });
@@ -28,11 +34,10 @@ app.get("/call", (req, res) => {
   res.send("call route working");
 });
 
-app.post("/call", (req, res) => {
-  res.send("call route working POST");
-});
+/* ===============================
+   Read Google Sheets
+================================= */
 
-// read sheet test
 app.get("/customers", async (req, res) => {
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
@@ -89,31 +94,12 @@ app.get("/plans", async (req, res) => {
   res.json(response.data.values);
 });
 
+/* ===============================
+   Server Start (LAST)
+================================= */
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log("Server running on port " + PORT);
-});
-
-app.post("/update-password", async (req, res) => {
-
-  const { row, password } = req.body;
-
-  try {
-
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: SPREADSHEET_ID,
-      range: CUSTOMERS!B${row},
-      valueInputOption: "RAW",
-      requestBody: {
-        values: [[password]]
-      }
-    });
-
-    res.send("updated");
-
-  } catch (error) {
-    res.status(500).send(error.toString());
-  }
-
 });
