@@ -24,6 +24,10 @@ app.get("/", (req, res) => {
   res.send("MyBPO backend running");
 });
 
+app.post("/call", (req, res) => {
+  res.send("call route working");
+});
+
 // read sheet test
 app.get("/customers", async (req, res) => {
   const response = await sheets.spreadsheets.values.get({
