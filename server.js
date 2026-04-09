@@ -24,6 +24,10 @@ app.get("/", (req, res) => {
   res.send("MyBPO backend running");
 });
 
+app.get("/call", (req, res) => {
+  res.send("call route working");
+});
+
 app.post("/call", (req, res) => {
   res.send("call route working");
 });
