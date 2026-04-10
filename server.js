@@ -95,6 +95,52 @@ app.get("/plans", async (req, res) => {
 });
 
 /* ===============================
+   Upload Campaign File (GCS)
+================================= */
+
+const multer = require("multer");
+const { Storage } = require("@google-cloud/storage");
+const fs = require("fs");
+
+const upload = multer({ dest: "uploads/" });
+
+const storage = new Storage({
+  keyFilename: "mybpo-platform-dc4d69bdbe41.json"
+});
+
+const bucketName = "mybpo-platform-storage";
+
+app.post("/upload-campaign", upload.single("file"), async (req, res) => {
+  try {
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    const destination = `campaign_lists/${Date.now()}_${file.originalname}`;
+
+    await storage.bucket(bucketName).upload(file.path, {
+      destination,
+      public: true,
+    });
+
+    const fileUrl = `https://storage.googleapis.com/${bucketName}/${destination}`;
+
+    fs.unlinkSync(file.path);
+
+    res.json({
+      success: true,
+      fileUrl
+    });
+
+  } catch (err) {
+    console.error("Upload error:", err);
+    res.status(500).json({ error: "Upload failed" });
+  }
+});
+
+/* ===============================
    Server Start (LAST)
 ================================= */
 
