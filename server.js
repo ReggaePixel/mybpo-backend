@@ -102,7 +102,7 @@ const multer = require("multer");
 const { Storage } = require("@google-cloud/storage");
 const fs = require("fs");
 
-const upload = multer({ dest: "uploads/" });
+const upload = multer({ dest: "/tmp/" });
 
 const storage = new Storage({
   credentials: {
@@ -127,14 +127,22 @@ app.post("/upload-campaign", upload.single("file"), async (req, res) => {
       destination,
     });
 
-    const fileUrl = `https://storage.googleapis.com/${bucketName}/${destination}`;
+const [signedUrl] = await storage
+  .bucket(bucketName)
+  .file(destination)
+  .getSignedUrl({
+    version: "v4",
+    action: "read",
+    expires: Date.now() + 1000 * 60 * 60 * 24 * 365 // 1 year
+  });
 
-    fs.unlinkSync(file.path);
+fs.unlinkSync(file.path);
 
-    res.json({
-      success: true,
-      fileUrl
-    });
+res.json({
+  success: true,
+  fileUrl: signedUrl,
+  filePath: destination // 🔥 IMPORTANT for future use
+});
 
   } catch (err) {
     console.error("Upload error:", err);
