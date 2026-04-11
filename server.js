@@ -125,7 +125,6 @@ app.post("/upload-campaign", upload.single("file"), async (req, res) => {
 
     await storage.bucket(bucketName).upload(file.path, {
       destination,
-      public: true,
     });
 
     const fileUrl = `https://storage.googleapis.com/${bucketName}/${destination}`;
