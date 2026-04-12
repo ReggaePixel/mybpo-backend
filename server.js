@@ -151,6 +151,42 @@ res.json({
 });
 
 /* ===============================
+   Create Campaign (Google Sheets)
+================================= */
+
+app.post("/create-campaign", async (req, res) => {
+  try {
+    const { businessId, sheetId, sheetName, status } = req.body;
+
+    if (!businessId || !sheetId || !sheetName) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SPREADSHEET_ID,
+      range: "CAMPAIGN LISTS!A:D",
+      valueInputOption: "USER_ENTERED",
+      requestBody: {
+        values: [
+          [
+            businessId,   // Column A
+            sheetId,      // Column B (filePath from GCS)
+            sheetName,    // Column C
+            status || "New" // Column D
+          ]
+        ],
+      },
+    });
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error("Create campaign error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ===============================
    Server Start (LAST)
 ================================= */
 
