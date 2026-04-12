@@ -133,7 +133,7 @@ const [signedUrl] = await storage
   .getSignedUrl({
     version: "v4",
     action: "read",
-    expires: Date.now() + 1000 * 60 * 60 * 24 * 365 // 1 year
+    expires: Date.now() + 1000 * 60 * 60 * 24 * 7
   });
 
 fs.unlinkSync(file.path);
