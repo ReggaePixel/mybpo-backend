@@ -374,6 +374,45 @@ app.get("/voice-token", async (req, res) => {
   }
 });
 
+const twilio = require("twilio");
+
+app.get("/token", async (req, res) => {
+  try {
+    const { businessId } = req.query;
+
+    if (!businessId) {
+      return res.status(400).json({ error: "Missing businessId" });
+    }
+
+    const creds = await getTwilioCredentials(businessId);
+
+    const AccessToken = twilio.jwt.AccessToken;
+    const VoiceGrant = AccessToken.VoiceGrant;
+
+    const identity = businessId; // unique per user
+
+    const voiceGrant = new VoiceGrant({
+      outgoingApplicationSid: "AP19b6d187e84f01eb44d3e836bb6980c7", // ✅ your TwiML App SID
+      incomingAllow: true
+    });
+
+    const token = new AccessToken(
+      creds.accountSid,
+      process.env.TWILIO_API_KEY,
+      process.env.TWILIO_API_SECRET,
+      { identity }
+    );
+
+    token.addGrant(voiceGrant);
+
+    res.json({ token: token.toJwt() });
+
+  } catch (err) {
+    console.error("Token error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 /* ===============================
    Twilio Voice Webhook
 ================================= */
@@ -381,7 +420,10 @@ app.get("/voice-token", async (req, res) => {
 app.post("/voice", (req, res) => {
   const twiml = new twilio.twiml.VoiceResponse();
 
-  twiml.say("Hello. This is a test call from MyBPO.");
+  const dial = twiml.dial();
+
+  // 🔥 Connect call to browser client (agent)
+  dial.client(req.query.businessId);
 
   res.type("text/xml");
   res.send(twiml.toString());
