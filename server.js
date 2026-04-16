@@ -243,15 +243,36 @@ app.get("/check-mins", async (req, res) => {
     });
 
     const rows = response.data.values;
+
+    if (!rows || rows.length === 0) {
+      return res.status(500).json({ error: "CUSTOMERS sheet is empty" });
+    }
+
     const headers = rows[0];
 
-    const idIndex = headers.indexOf("ASSIGNED ID");
-    const minsIndex = headers.indexOf("MINS AVAIL");
+    // 🔥 Normalize headers (prevents ALL your current issues)
+    const normalize = (str) => String(str || "").trim().toUpperCase();
+    const headersNormalized = headers.map(h => normalize(h));
 
+    const idIndex = headersNormalized.indexOf("ASSIGNED ID");
+    const minsIndex = headersNormalized.indexOf("MINS AVAIL");
+
+    // ✅ Hard fail if structure is wrong (with debug info)
+    if (idIndex === -1 || minsIndex === -1) {
+      console.error("HEADER ERROR:", headers);
+      return res.status(500).json({
+        error: "Required columns missing in CUSTOMERS sheet",
+        headersFound: headers
+      });
+    }
+
+    // 🔍 Find user
     for (let i = 1; i < rows.length; i++) {
-      if (rows[i][idIndex] === businessId) {
+      const row = rows[i];
+
+      if (String(row[idIndex]).trim() === String(businessId).trim()) {
         return res.json({
-          mins: Number(rows[i][minsIndex] || 0)
+          mins: Number(row[minsIndex] || 0)
         });
       }
     }
