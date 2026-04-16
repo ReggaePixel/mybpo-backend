@@ -327,6 +327,53 @@ app.post("/make-call", async (req, res) => {
   }
 });
 
+const AccessToken = require("twilio").jwt.AccessToken;
+const VoiceGrant = AccessToken.VoiceGrant;
+
+/* ===============================
+   Generate Twilio Voice Token
+================================= */
+
+app.get("/voice-token", async (req, res) => {
+  try {
+    const { businessId } = req.query;
+
+    if (!businessId) {
+      return res.status(400).json({ error: "Missing businessId" });
+    }
+
+    // 🔥 Get user's Twilio credentials
+    const creds = await getTwilioCredentials(businessId);
+
+    // These MUST be set in your Render env
+    const TWILIO_API_KEY = process.env.TWILIO_API_KEY;
+    const TWILIO_API_SECRET = process.env.TWILIO_API_SECRET;
+    const TWIML_APP_SID = process.env.TWIML_APP_SID;
+
+    const identity = businessId; // unique per user
+
+    const token = new AccessToken(
+      creds.accountSid,
+      TWILIO_API_KEY,
+      TWILIO_API_SECRET,
+      { identity }
+    );
+
+    const voiceGrant = new VoiceGrant({
+      outgoingApplicationSid: TWIML_APP_SID,
+      incomingAllow: true
+    });
+
+    token.addGrant(voiceGrant);
+
+    res.json({ token: token.toJwt() });
+
+  } catch (err) {
+    console.error("Voice token error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 /* ===============================
    Twilio Voice Webhook
 ================================= */
