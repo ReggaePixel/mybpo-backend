@@ -134,51 +134,6 @@ app.get("/plans", async (req, res) => {
 });
 
 /* ===============================
-   Get User Calling Numbers
-================================= */
-
-app.get("/user-call-numbers", async (req, res) => {
-  try {
-    const { businessId } = req.query;
-
-    if (!businessId) {
-      return res.status(400).json({ error: "Missing businessId" });
-    }
-
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: "CUSTOMERS"
-    });
-
-    const rows = response.data.values;
-    const headers = rows[0];
-
-    const idIndex = headers.indexOf("ASSIGNED ID");
-    const num1Index = headers.indexOf("ASSIGNED NUMBER 1");
-    const num2Index = headers.indexOf("ASSIGNED NUMBER 2");
-    const num3Index = headers.indexOf("ASSIGNED NUMBER 3");
-
-    for (let i = 1; i < rows.length; i++) {
-      if (rows[i][idIndex] === businessId) {
-        return res.json({
-          numbers: [
-            rows[i][num1Index],
-            rows[i][num2Index],
-            rows[i][num3Index]
-          ]
-        });
-      }
-    }
-
-    return res.status(404).json({ error: "User not found" });
-
-  } catch (err) {
-    console.error("User numbers error:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-/* ===============================
    Upload Campaign File (GCS)
 ================================= */
 
@@ -266,6 +221,45 @@ app.post("/create-campaign", async (req, res) => {
 
   } catch (err) {
     console.error("Create campaign error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ===============================
+   Check Minutes (CUSTOMERS sheet)
+================================= */
+
+app.get("/check-mins", async (req, res) => {
+  try {
+    const { businessId } = req.query;
+
+    if (!businessId) {
+      return res.status(400).json({ error: "Missing businessId" });
+    }
+
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: "CUSTOMERS"
+    });
+
+    const rows = response.data.values;
+    const headers = rows[0];
+
+    const idIndex = headers.indexOf("ASSIGNED ID");
+    const minsIndex = headers.indexOf("MINS AVAIL");
+
+    for (let i = 1; i < rows.length; i++) {
+      if (rows[i][idIndex] === businessId) {
+        return res.json({
+          mins: Number(rows[i][minsIndex] || 0)
+        });
+      }
+    }
+
+    return res.status(404).json({ error: "User not found" });
+
+  } catch (err) {
+    console.error("Check mins error:", err);
     res.status(500).json({ error: err.message });
   }
 });
