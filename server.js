@@ -24,41 +24,50 @@ const sheets = google.sheets({ version: "v4", auth });
 const SPREADSHEET_ID = "1sg4RyEdSYpJB74Y_kV3PEwOzsroRl4U8NOjtuYgQ0MM";
 
 /* ===============================
-   Get Twilio Credentials (Dynamic per User)
+   Get Twilio Credentials (SAFE)
 ================================= */
 
 async function getTwilioCredentials(businessId) {
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
-    range: "CUSTOMERS",
+    range: "CUSTOMERS"
   });
 
   const rows = response.data.values;
 
-  if (!rows || rows.length < 2) {
-    throw new Error("No customer data found");
+  if (!rows || rows.length === 0) {
+    throw new Error("CUSTOMERS sheet is empty");
   }
 
   const headers = rows[0];
 
-  const businessIdIndex = headers.indexOf("BUSINESS ID");
-  const sidIndex = headers.indexOf("SID");
-  const tokenIndex = headers.indexOf("AUTH TOKEN");
+  // 🔥 Normalize headers (THIS fixes your issue)
+  const normalize = (str) => String(str || "").trim().toUpperCase();
+  const headersNormalized = headers.map(h => normalize(h));
 
-  if (businessIdIndex === -1 || sidIndex === -1 || tokenIndex === -1) {
+  const idIndex = headersNormalized.indexOf("ASSIGNED ID");
+  const sidIndex = headersNormalized.indexOf("SID");
+  const tokenIndex = headersNormalized.indexOf("AUTH TOKEN");
+
+  // ✅ Hard fail with debug info
+  if (idIndex === -1 || sidIndex === -1 || tokenIndex === -1) {
+    console.error("TWILIO HEADER ERROR:", headers);
     throw new Error("Required columns missing in CUSTOMERS sheet");
   }
 
-  const userRow = rows.find(row => row[businessIdIndex] === businessId);
+  // 🔍 Find user
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
 
-  if (!userRow) {
-    throw new Error("User not found");
+    if (String(row[idIndex]).trim() === String(businessId).trim()) {
+      return {
+        accountSid: String(row[sidIndex]).trim(),
+        authToken: String(row[tokenIndex]).trim()
+      };
+    }
   }
 
-  return {
-    accountSid: userRow[sidIndex],
-    authToken: userRow[tokenIndex],
-  };
+  throw new Error("User not found");
 }
 
 /* ===============================
