@@ -311,10 +311,10 @@ app.post("/make-call", async (req, res) => {
     const client = twilio(creds.accountSid, creds.authToken);
 
     const call = await client.calls.create({
-      to: to,
-      from: from,
-      url: `https://mybpo-backend.onrender.com/voice?businessId=${businessId}`
-    });
+  to: `client:${businessId}`, // 👈 connect to browser user
+  from: from,
+  url: `https://mybpo-backend.onrender.com/connect?to=${to}`
+});
 
     res.json({
       success: true,
@@ -422,6 +422,20 @@ app.post("/voice", (req, res) => {
 
   // 🔥 Connect call to browser client (agent)
   dial.client(req.query.businessId);
+
+  res.type("text/xml");
+  res.send(twiml.toString());
+});
+
+app.post("/connect", (req, res) => {
+  const VoiceResponse = twilio.twiml.VoiceResponse;
+  const twiml = new VoiceResponse();
+
+  const to = req.query.to;
+
+  const dial = twiml.dial();
+
+  dial.number(to); // 👈 actual customer number
 
   res.type("text/xml");
   res.send(twiml.toString());
