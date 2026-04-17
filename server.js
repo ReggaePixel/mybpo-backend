@@ -374,8 +374,6 @@ app.get("/voice-token", async (req, res) => {
   }
 });
 
-const twilio = require("twilio");
-
 app.get("/token", async (req, res) => {
   try {
     const { businessId } = req.query;
